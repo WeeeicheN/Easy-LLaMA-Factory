@@ -8,11 +8,11 @@ export FORCE_TORCHRUN=1
 llamafactory-cli train train_args/pretrain/your_train_config.yaml
 ```
 
-## ./train_args/args_list
+## train_args/args_list
 
 This file provides all training args supported in this project.
 
-## ./data/dataset_info.json
+## data/dataset_info.json
 
 **For user-added pt data:**
 
