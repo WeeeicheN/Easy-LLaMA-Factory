@@ -1,5 +1,30 @@
 # Tune your LLM using LLaMA-Factory Easily
 
+## train.sh
+
+```bash
+export FORCE_TORCHRUN=1
+
+llamafactory-cli train train_args/pretrain/your_train_config.yaml
+```
+
+## ./train_args/args_list
+
+This file provides all training args supported in this project.
+
+## ./data/dataset_info.json
+
+**For user-added pt data:**
+
+```python
+"your_pt_data": {
+    "file_name": "your_pt_data.json",
+    "columns": {
+    "prompt": "text"
+    }
+}
+```
+
 Below is LLaMA-Factory's original README.
 ------
 
