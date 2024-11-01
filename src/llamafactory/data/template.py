@@ -380,13 +380,16 @@ def get_template_and_fix_tokenizer(tokenizer: "PreTrainedTokenizer", data_args: 
         if not stop_words:
             raise ValueError("Stop words are required to replace the EOS token.")
 
+        logger.info(f"template.replace_eos == True, stop_words[0] = {stop_words[0]}")
         _add_or_replace_eos_token(tokenizer, eos_token=stop_words[0])
         stop_words = stop_words[1:]
 
     if tokenizer.eos_token_id is None:
+        logger.info("tokenizer.eos_token_id is None!")
         _add_or_replace_eos_token(tokenizer, eos_token="<|endoftext|>")
 
     if tokenizer.pad_token_id is None:
+        logger.info("tokenizer.pad_token_id is None!")
         tokenizer.pad_token = tokenizer.eos_token
         logger.info(f"Add pad token: {tokenizer.pad_token}")
 
@@ -730,6 +733,31 @@ _register_template(
 
 _register_template(
     name="llama3",
+    format_user=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>user<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    format_system=StringFormatter(slots=["<|start_header_id|>system<|end_header_id|>\n\n{{content}}<|eot_id|>"]),
+    format_observation=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>tool<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    format_prefix=EmptyFormatter(slots=[{"bos_token"}]),
+    stop_words=["<|eot_id|>"],
+    replace_eos=True,
+    replace_jinja_template=False,
+)
+
+_register_template(
+    name="llama3x",
     format_user=StringFormatter(
         slots=[
             (
