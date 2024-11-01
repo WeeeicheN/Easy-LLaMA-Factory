@@ -12,6 +12,10 @@ llamafactory-cli train train_args/pretrain/your_train_config.yaml
 
 This file provides all training args supported in this project.
 
+## train_args/pretrain/
+
+This dir provides examples.
+
 ## data/dataset_info.json
 
 **For user-added pt data:**

@@ -1,0 +1,43 @@
+### model
+model_name_or_path: ~/pretrained_models/Llama-3.2-1B-Instruct
+
+### method
+stage: pt
+do_train: true
+finetuning_type: full
+deepspeed: train_args/ds_z0_config.json
+
+### dataset
+dataset: your_pt_data
+template: llama3
+cutoff_len: 1024
+overwrite_cache: true
+preprocessing_num_workers: 16
+#### only for debugging
+# max_samples: 1000
+####
+
+### output
+output_dir: saves/llamafy-llama-3.2-1b-instruct_pretrain_full
+logging_steps: 1
+save_steps: 100
+save_total_limit: 1
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 2
+learning_rate: 1.0e-5
+num_train_epochs: 1
+lr_scheduler_type: cosine
+warmup_ratio: 0.01
+bf16: true
+ddp_timeout: 180000000
+report_to: tensorboard
+
+### eval
+val_size: 0.05
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 500
