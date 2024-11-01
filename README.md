@@ -12,6 +12,11 @@ llamafactory-cli train train_args/pretrain/your_train_config.yaml
 
 This file provides all training args supported in this project.
 
+```bash
+--dataset_dir 
+Path to the folder containing the datasets. (default: data)
+```
+
 ## train_args/pretrain/
 
 This dir provides examples.
@@ -28,6 +33,61 @@ This dir provides examples.
     }
 }
 ```
+
+## src/llamafactory/data/aligner.py
+
+This file provides details of aligning data.
+
+```python
+def convert_alpaca(xxx):
+    """
+        for data == {"prompt":..., "query":..., "response":...}
+        
+        prompt.append({"role": Role.USER.value, "content": f"{prompt}\n{query}"})
+        
+        # if supervised
+        response = [{"role": Role.ASSISTANT.value, "content": example[dataset_attr.response]}]
+        # elif unsupervised
+        response = []
+
+        output = {
+        "_prompt": prompt,
+        "_response": response,
+        "_system": example[dataset_attr.system] if dataset_attr.system else "",
+        "_tools": example[dataset_attr.tools] if dataset_attr.tools else "",
+        "_images": convert_images(example[dataset_attr.images]) if dataset_attr.images else None,
+        "_videos": convert_videos(example[dataset_attr.videos]) if dataset_attr.videos else None,
+        }
+    """
+```
+
+## src/llamafactory/data/preprocess.py
+
+This file provides details of preprocessing data.
+
+### src/llamafactory/data/processors/pretrain.py
+
+```
+Commit 6979f3f:
+
+llama3在预训练时使用的tokenizer.eos_toke是'<|end_of_text|>'，而Meta-Llama-3-8B-Instruct和很多llama3中文模型 都改成了<|eot_id|> ，进行增量预训练时应该使用'<|end_of_text|>' 。
+
+Fixes # (issue)
+
+经过大量的增量预训练，进行对比试验，发现这个bug：llama3在预训练时使用的tokenizer.eos_toke是'<|end_of_text|>' ，这里在每条数据后面也得用这个，而不是'<|eot_id|>'，否则增量预训练时很容易导致严重的性能下降
+
+Result:
+
++ eos_token = '<|end_of_text|>' if data_args.template == 'llama3' else  tokenizer.eos_token
+```
+
+然而，根据 https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct/discussions/105
+
+该问题可能是由于Llama-3的tokenizer_config.json中设定："eos_token": "<|end_of_text|>"
+
+因此在后续版本中（tokenizer_config.json中设定："eos_token": "<|eot_id|>"）应该不存在这个问题
+
+本仓库基于此新设置了llama3x的template，作为Llama-3.1等后续版本的template
 
 Below is LLaMA-Factory's original README.
 ------

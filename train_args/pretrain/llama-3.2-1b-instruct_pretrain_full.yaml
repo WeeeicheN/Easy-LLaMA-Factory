@@ -9,7 +9,7 @@ deepspeed: train_args/ds_z0_config.json
 
 ### dataset
 dataset: your_pt_data
-template: llama3
+template: llama3x
 cutoff_len: 1024
 overwrite_cache: true
 preprocessing_num_workers: 16
