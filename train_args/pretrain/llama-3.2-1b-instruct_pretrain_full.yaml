@@ -13,6 +13,7 @@ template: llama3x
 cutoff_len: 1024
 overwrite_cache: true
 preprocessing_num_workers: 16
+tokenized_path: data/cache
 #### only for debugging
 # max_samples: 1000
 ####

@@ -18,6 +18,9 @@ Path to the folder containing the datasets. (default: data)
 
 --packing
 Enable sequences packing in training. Will automatically enable in pre-training.  (default: None)
+
+--tokenized_path
+Path to save or load the tokenized datasets. (default: None)
 ```
 
 ## train_args/pretrain/
