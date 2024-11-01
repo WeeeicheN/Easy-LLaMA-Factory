@@ -3,7 +3,7 @@
 ## train.sh
 
 ```bash
-export FORCE_TORCHRUN=1
+export FORCE_TORCHRUN=1 # This is required to enable deepspeed
 
 llamafactory-cli train train_args/pretrain/your_train_config.yaml
 ```
