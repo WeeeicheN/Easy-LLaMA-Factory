@@ -15,6 +15,9 @@ This file provides all training args supported in this project.
 ```bash
 --dataset_dir 
 Path to the folder containing the datasets. (default: data)
+
+--packing
+Enable sequences packing in training. Will automatically enable in pre-training.  (default: None)
 ```
 
 ## train_args/pretrain/
