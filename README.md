@@ -40,6 +40,107 @@ This dir provides examples.
 }
 ```
 
+**Data Format Example**
+
+**Read Function (from site-packages/datasets/packaged_modules/json/json.py)**
+```python
+            # If the file is one json object and if we need to look at the items in one specific field
+            if self.config.field is not None:
+                with open(file, encoding=self.config.encoding, errors=self.config.encoding_errors) as f:
+                    dataset = ujson_loads(f.read())
+                # We keep only the field we are interested in
+                dataset = dataset[self.config.field]
+                df = pandas_read_json(io.StringIO(ujson_dumps(dataset)))
+                if df.columns.tolist() == [0]:
+                    df.columns = list(self.config.features) if self.config.features else ["text"]
+                pa_table = pa.Table.from_pandas(df, preserve_index=False)
+                yield file_idx, self._cast_table(pa_table)
+
+            # If the file has one json object per line
+            else:
+                with open(file, "rb") as f:
+                    batch_idx = 0
+                    # Use block_size equal to the chunk size divided by 32 to leverage multithreading
+                    # Set a default minimum value of 16kB if the chunk size is really small
+                    block_size = max(self.config.chunksize // 32, 16 << 10)
+                    encoding_errors = (
+                        self.config.encoding_errors if self.config.encoding_errors is not None else "strict"
+                    )
+                    while True:
+                        batch = f.read(self.config.chunksize)
+                        if not batch:
+                            break
+                        # Finish current line
+                        try:
+                            batch += f.readline()
+                        except (AttributeError, io.UnsupportedOperation):
+                            batch += readline(f)
+                        # PyArrow only accepts utf-8 encoded bytes
+                        if self.config.encoding != "utf-8":
+                            batch = batch.decode(self.config.encoding, errors=encoding_errors).encode("utf-8")
+                        try:
+                            while True:
+                                try:
+                                    pa_table = paj.read_json(
+                                        io.BytesIO(batch), read_options=paj.ReadOptions(block_size=block_size)
+                                    )
+                                    break
+                                except (pa.ArrowInvalid, pa.ArrowNotImplementedError) as e:
+                                    if (
+                                        isinstance(e, pa.ArrowInvalid)
+                                        and "straddling" not in str(e)
+                                        or block_size > len(batch)
+                                    ):
+                                        raise
+                                    else:
+                                        # Increase the block size in case it was too small.
+                                        # The block size will be reset for the next file.
+                                        logger.debug(
+                                            f"Batch of {len(batch)} bytes couldn't be parsed with block_size={block_size}. Retrying with block_size={block_size * 2}."
+                                        )
+                                        block_size *= 2
+                        except pa.ArrowInvalid as e:
+                            try:
+                                with open(
+                                    file, encoding=self.config.encoding, errors=self.config.encoding_errors
+                                ) as f:
+                                    df = pandas_read_json(f)
+                            except ValueError:
+                                logger.error(f"Failed to load JSON from file '{file}' with error {type(e)}: {e}")
+                                raise e
+                            if df.columns.tolist() == [0]:
+                                df.columns = list(self.config.features) if self.config.features else ["text"]
+                            try:
+                                pa_table = pa.Table.from_pandas(df, preserve_index=False)
+                            except pa.ArrowInvalid as e:
+                                logger.error(
+                                    f"Failed to convert pandas DataFrame to Arrow Table from file '{file}' with error {type(e)}: {e}"
+                                )
+                                raise ValueError(
+                                    f"Failed to convert pandas DataFrame to Arrow Table from file {file}."
+                                ) from None
+                            yield file_idx, self._cast_table(pa_table)
+                            break
+                        yield (file_idx, batch_idx), self._cast_table(pa_table)
+                        batch_idx += 1
+```
+
+{pt, sft}.json
+```
+[{"text": "example1"}, {"text": "example2"}, {"text": "example3"}]
+
+[{"instruction": "", "input": "", "output": ""}, {"instruction": "", "input": "", "output": ""}]
+```
+
+{pt, sft}.jsonl
+```
+{"text": "example1"}
+{"text": "example2"}
+{"text": "example3"}
+
+{"instruction": "", "input": "", "output": ""}
+```
+
 ## src/llamafactory/data/aligner.py
 
 This file provides details of aligning data.
