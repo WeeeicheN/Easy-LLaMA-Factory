@@ -21,6 +21,10 @@ Enable sequences packing in training. Will automatically enable in pre-training.
 
 --tokenized_path
 Path to save or load the tokenized datasets. (default: None)
+
+--val_size
+Size of the development set, should be an integer or a float in range `[0,1)`. (default: 0.0)
+# 注意在数据量很大的时候最好直接指定val的条数，否则val需要很长时间
 ```
 
 ## train_args/pretrain/
